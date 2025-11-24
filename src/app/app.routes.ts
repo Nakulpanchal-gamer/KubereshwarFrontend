@@ -29,6 +29,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/admin-login/admin-login.component').then(m => m.AdminLoginComponent)
   },
   {
+    path: 'admin/rstpss',
+    loadComponent: () => import('./features/admin/admin-reset-password/admin-reset-password.component').then(m => m.AdminResetPasswordComponent)
+  },
+  {
     path: 'admin/dashboard',
     component: AdminDashboardComponent,
     canActivate: [authGuard],

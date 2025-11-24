@@ -1,7 +1,7 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -9,123 +9,68 @@ import { ToasterService } from '../../../core/services/toaster.service';
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
-<div class="d-flex align-items-center justify-content-center">
-  <form class="card p-4 bg-white min-w-360" #f="ngForm" (ngSubmit)="step==='request' ? requestOtp() : verifyOtp(f)">
-    <h4 class="mb-3 text-center">Admin Login (OTP)</h4>
+<div class="d-flex align-items-center justify-content-center min-vh-100">
+  <form class="card p-4 bg-white min-w-360" #f="ngForm" (ngSubmit)="login(f)">
+    <h4 class="mb-3 text-center">Admin Login</h4>
 
-    <!-- Step 1: Request OTP -->
-    <ng-container *ngIf="step === 'request'">
-      <p class="text-muted small mb-3">
-        We will send a one-time code to the registered admin email.
-      </p>
-
-      <button type="submit" class="btn btn-primary w-100" [disabled]="loading || cooldownLeft>0">
-        <span *ngIf="!loading && cooldownLeft===0">Send OTP</span>
-        <span *ngIf="!loading && cooldownLeft>0">Resend in {{ cooldownLeft }}s</span>
-        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      </button>
-
-      <div *ngIf="error" class="text-danger text-center small mt-3">{{ error }}</div>
-    </ng-container>
-
-    <!-- Step 2: Verify OTP -->
-    <ng-container *ngIf="step === 'verify'">
-      <div class="mb-3">
-        <label class="form-label">Enter OTP</label>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <div class="position-relative">
         <input
-          class="form-control text-center fs-5"
-          type="text"
-          name="otp"
-          [(ngModel)]="otp"
+          class="form-control"
+          [type]="showPassword ? 'text' : 'password'"
+          name="password"
+          [(ngModel)]="password"
           required
-          autocomplete="one-time-code"
-          inputmode="numeric"
-          pattern="\\d*"
-          maxlength="6"
-          placeholder="••••••"
+          autocomplete="current-password"
+          placeholder="Enter password"
         >
-        <div class="form-text">Code is valid for a few minutes.</div>
+        <button
+          type="button"
+          class="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-2"
+          (click)="togglePasswordVisibility()"
+          style="border: none; background: none; z-index: 10; color: #6c757d; padding: 0.25rem 0.5rem;"
+          title="{{ showPassword ? 'Hide password' : 'Show password' }}"
+        >
+          <span style="font-size: 1.2rem; cursor: pointer; user-select: none;">{{ showPassword ? '🙈' : '👁️' }}</span>
+        </button>
       </div>
+    </div>
 
-      <button class="btn btn-primary w-100" type="submit" [disabled]="loading || !otp?.trim()">
-        <span *ngIf="!loading">Verify & Login</span>
-        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      </button>
+    <button class="btn btn-primary w-100" type="submit" [disabled]="loading || !password?.trim()">
+      <span *ngIf="!loading">Login</span>
+      <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    </button>
 
-      <button type="button"
-              class="btn btn-link w-100 mt-2"
-              (click)="resendOtp()"
-              [disabled]="loading || cooldownLeft>0">
-        Resend OTP <span *ngIf="cooldownLeft>0">({{ cooldownLeft }}s)</span>
-      </button>
-
-      <div *ngIf="error" class="text-danger text-center small mt-3">{{ error }}</div>
-    </ng-container>
+    <div *ngIf="error" class="text-danger text-center small mt-3">{{ error }}</div>
   </form>
 </div>
   `
 })
-export class AdminLoginComponent implements OnDestroy {
-  // UI state
-  step: 'request' | 'verify' = 'request';
+export class AdminLoginComponent {
   loading = false;
   error = '';
-  otp = '';
+  password = '';
+  showPassword = false;
 
-  // resend cooldown
-  cooldownLeft = 0;
-  private cooldownTimer?: any;
-
-  // API base
   private base = `${environment.apiBase}/api/admin`;
 
   constructor(private http: HttpClient, private router: Router, private toast: ToasterService) {}
 
-  ngOnDestroy(): void {
-    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
-  // ---- Step 1: Request OTP ----
-  requestOtp(): void {
-    if (this.loading) return;
-    this.loading = true;
-    this.error = '';
-
-    this.http.post<{ message: string }>(`${this.base}/otp/request`, {})
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.toast.info('If the account exists, an OTP has been sent.');
-          this.step = 'verify';
-          this.startCooldown(30); // UI cooldown; server enforces real one
-        },
-        error: (err) => {
-          this.loading = false;
-          const msg = err?.error?.message || 'Unable to send OTP';
-          this.error = msg;
-          this.toast.error(msg);
-          // If server returns 429, also start cooldown for better UX
-          if (err?.status === 429) this.startCooldown(30);
-        }
-      });
-  }
-
-  resendOtp(): void {
-    if (this.cooldownLeft > 0 || this.loading) return;
-    this.requestOtp();
-  }
-
-  // ---- Step 2: Verify OTP ----
-  verifyOtp(f: NgForm): void {
-    if (this.loading) return;
-    if (!this.otp || !this.otp.trim()) return;
+  login(f: NgForm): void {
+    if (this.loading || !f.valid) return;
+    if (!this.password || !this.password.trim()) return;
 
     this.loading = true;
     this.error = '';
 
-    this.http.post<{ token: string }>(`${this.base}/otp/verify`, { otp: this.otp.trim() })
+    this.http.post<{ token: string }>(`${this.base}/login`, { password: this.password.trim() })
       .subscribe({
         next: (res) => {
           this.loading = false;
@@ -135,25 +80,11 @@ export class AdminLoginComponent implements OnDestroy {
         },
         error: (err) => {
           this.loading = false;
-          const msg = err?.error?.message || 'Invalid OTP';
+          const msg = err?.error?.message || 'Invalid credentials';
           this.error = msg;
           this.toast.error(msg);
-          // Clear OTP on invalid attempt for safety
-          if (err?.status === 400) this.otp = '';
+          this.password = '';
         }
       });
-  }
-
-  // ---- Cooldown helper (client-side UX only) ----
-  private startCooldown(seconds: number): void {
-    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
-    this.cooldownLeft = seconds;
-    this.cooldownTimer = setInterval(() => {
-      this.cooldownLeft -= 1;
-      if (this.cooldownLeft <= 0 && this.cooldownTimer) {
-        clearInterval(this.cooldownTimer);
-        this.cooldownTimer = undefined;
-      }
-    }, 1000);
   }
 }
