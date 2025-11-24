@@ -70,10 +70,19 @@ import { Enquiry } from '../../../core/models';
 
         <!-- Product -->
         <td class="small">
-          <span *ngIf="e.product as p; else noProd">
+          <span *ngIf="e.product as p; else checkCategory">
             {{ displayProductName(p) }}
           </span>
-          <ng-template #noProd><span class="text-muted">N/A</span></ng-template>
+          <ng-template #checkCategory>
+            <span *ngIf="getCategoryName(e); else noProd">
+              <span class="fw-semibold">{{ getCategoryName(e) }}</span>
+              <span *ngIf="getAllProductsOfCategory(e)" class="text-muted"> (Entire category)</span>
+              <span *ngIf="!getAllProductsOfCategory(e) && getProductIds(e)?.length" class="text-muted">
+                ({{ getProductIds(e)?.length }} product{{ (getProductIds(e)?.length ?? 0) > 1 ? 's' : '' }})
+              </span>
+            </span>
+            <ng-template #noProd><span class="text-muted">N/A</span></ng-template>
+          </ng-template>
         </td>
 
         <!-- Message -->
@@ -291,5 +300,17 @@ export class ViewEnquiriesComponent implements OnInit {
     if (!p) return 'N/A';
     if (typeof p === 'string') return p;
     return (p as any)?.name ?? 'N/A';
+  }
+
+  getCategoryName(e: Enquiry): string | undefined {
+    return (e as any).categoryName;
+  }
+
+  getAllProductsOfCategory(e: Enquiry): boolean {
+    return (e as any).allProductsOfCategory ?? false;
+  }
+
+  getProductIds(e: Enquiry): string[] | undefined {
+    return (e as any).productIds;
   }
 }

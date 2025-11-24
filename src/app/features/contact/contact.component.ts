@@ -87,34 +87,57 @@ const getId = (o: IdLike | null | undefined) => (o && (o._id || o.id)) ?? '';
               <div class="col-md-6">
                 <label class="form-label">Your Name</label>
                 <div class="input-icon">
-                  <input type="text" class="form-control" [(ngModel)]="formData.name" name="name" required minlength="2">
+                  <input #nameInput="ngModel"
+                         type="text" 
+                         class="form-control" 
+                         [(ngModel)]="formData.name" 
+                         name="name" 
+                         required 
+                         minlength="2"
+                         [class.is-invalid]="formSubmitted && (!formData.name || formData.name.trim().length < 2)">
                   <span class="icon">
                     <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5a5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4Z"/></svg>
                   </span>
                 </div>
-                <div class="invalid small text-danger" *ngIf="form.submitted && form.controls['name']?.invalid">Enter your name (min 2 chars).</div>
+                <div class="invalid-feedback" *ngIf="formSubmitted && (!formData.name || formData.name.trim().length < 2)">
+                  <span *ngIf="!formData.name || formData.name.trim().length === 0">Name is required.</span>
+                  <span *ngIf="formData.name && formData.name.trim().length > 0 && formData.name.trim().length < 2">Name must be at least 2 characters.</span>
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">Your Email</label>
                 <div class="input-icon">
-                  <input type="email" class="form-control" [(ngModel)]="formData.email" name="email" required email>
+                  <input #emailInput="ngModel"
+                         type="email" 
+                         class="form-control" 
+                         [(ngModel)]="formData.email" 
+                         name="email" 
+                         email
+                         [class.is-invalid]="formSubmitted && (hasContactError() || (formData.email?.trim() && emailInput.errors?.['email']))">
                   <span class="icon">
                     <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4a2 2 0 0 0-2 2v1l10 6l10-6V6a2 2 0 0 0-2-2Zm0 5.2L12 15L4 9.2V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9.2Z"/></svg>
                   </span>
                 </div>
-                <div class="small text-muted">We’ll use this to reply to your enquiry.</div>
-                <div class="invalid small text-danger" *ngIf="form.submitted && form.controls['email']?.invalid">Enter a valid email.</div>
+                <div class="small text-muted">We'll use this to reply to your enquiry.</div>
+                <div class="invalid-feedback" *ngIf="formSubmitted && formData.email && formData.email.trim() && emailInput.errors?.['email']">Enter a valid email address.</div>
+                <div class="invalid-feedback" *ngIf="formSubmitted && hasContactError() && !formData.email?.trim()">Please provide either email or phone.</div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">Phone</label>
                 <div class="input-icon">
-                  <input type="number" class="form-control" [(ngModel)]="formData.phone" name="phone" required>
+                  <input #phoneInput="ngModel"
+                         type="tel" 
+                         class="form-control" 
+                         [(ngModel)]="formData.phone" 
+                         name="phone"
+                         [class.is-invalid]="formSubmitted && hasContactError() && !formData.phone?.trim()">
                   <span class="icon">
                     <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.9 15.9 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C11.3 21 3 12.7 3 2a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1L6.6 10.8Z"/></svg>
                   </span>
                 </div>
+                <div class="invalid-feedback" *ngIf="formSubmitted && hasContactError() && !formData.phone?.trim()">Please provide either email or phone.</div>
               </div>
 
               <!-- Category / Product selection -->
@@ -129,7 +152,7 @@ const getId = (o: IdLike | null | undefined) => (o && (o._id || o.id)) ?? '';
                   <option value="" disabled selected>Choose a category…</option>
                   <option *ngFor="let c of categories" [value]="getId(c)">{{ c.name }}</option>
                 </select>
-                <div class="invalid small text-danger" *ngIf="form.submitted && form.controls['categoryId']?.invalid">
+                <div class="invalid small text-danger" *ngIf="formSubmitted && form.controls['categoryId']?.invalid">
                   Please select a category.
                 </div>
               </div>
@@ -164,21 +187,11 @@ const getId = (o: IdLike | null | undefined) => (o && (o._id || o.id)) ?? '';
               <div class="col-12">
                 <label class="form-label">Message</label>
                 <textarea rows="5" class="form-control" [(ngModel)]="formData.message" name="message" required minlength="10"></textarea>
-                <div class="invalid small text-danger" *ngIf="form.submitted && form.controls['message']?.invalid">
+                <div class="invalid small text-danger" *ngIf="formSubmitted && form.controls['message']?.invalid">
                   Add a short message (min 10 chars).
                 </div>
               </div>
 
-              <!-- Consent -->
-              <div class="col-12">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.consent" name="consent" required>
-                  <label class="form-check-label">You may contact me about my enquiry.</label>
-                </div>
-                <div class="invalid small text-danger" *ngIf="form.submitted && form.controls['consent']?.invalid">
-                  Please provide consent so we can reply.
-                </div>
-              </div>
 
               <!-- Honeypot -->
               <input type="text" name="website" [(ngModel)]="formData.website" class="visually-hidden" tabindex="-1" autocomplete="off">
@@ -205,8 +218,21 @@ const getId = (o: IdLike | null | undefined) => (o && (o._id || o.id)) ?? '';
     .lift:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important; }
     .input-icon { position: relative; }
     .input-icon .icon { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: .55; }
-    .invalid { display: none; }
-    :host ::ng-deep form.ng-submitted .ng-invalid ~ .invalid { display: block; }
+    .invalid-feedback {
+      display: block;
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+      color: #dc3545;
+    }
+    .form-control.is-invalid {
+      border-color: #dc3545;
+      padding-right: calc(1.5em + 0.75rem);
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6 .4.4.4-.4'/%3e%3cpath d='m6.2 8.4-.4-.4-.4.4'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right calc(0.375em + 0.1875rem) center;
+      background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
     .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px,1px,1px,1px); white-space: nowrap; }
   `]
 })
@@ -224,12 +250,19 @@ export class ContactComponent implements OnInit {
   products: any[] = [];
 
   submitting = false;
+  formSubmitted = false;
   formData: {
     name: string; email: string; message: string;
     phone?: string; topic?: string; consent?: boolean; website?: string;
     categoryId?: string; productIds: string[]; allProductsOfCategory: boolean;
   } = { name: '', email: '', message: '', phone: '', topic: '', consent: false, website: '',
         categoryId: '', productIds: [], allProductsOfCategory: false };
+
+  hasContactError(): boolean {
+    const email = (this.formData.email || '').trim();
+    const phone = (this.formData.phone || '').trim();
+    return !email && !phone;
+  }
   
   // Map data
   mapAddress = 'Kubereshwar Machine Products / hydraulic press manufacturer, Jay Bharat Rangshala Compound, 15/4/26, near Tirupati Industrial Estate, Dhobi Ghat, Kailash Nagar, Saraspur, Ahmedabad, Gujarat 380018';
@@ -271,12 +304,35 @@ export class ContactComponent implements OnInit {
   }
 
   submitForm(form: NgForm) {
-    if (form.invalid) return;
+    // Mark form as submitted to show validation messages
+    this.formSubmitted = true;
+
+    // Check if name is provided
+    const nameValid = this.formData.name && this.formData.name.trim().length >= 2;
+    
+    // Check if at least one of email or phone is provided
+    const email = (this.formData.email || '').trim();
+    const phone = (this.formData.phone || '').trim();
+    const contactValid = email || phone;
+    
+    // Validate email format if provided
+    const emailFormatValid = !email || (form.controls['email'] && !form.controls['email'].errors?.['email']);
+    
+    // Check other form validations (category, message)
+    const otherFieldsValid = form.controls['categoryId']?.valid && 
+                            form.controls['message']?.valid;
+
+    // If any validation fails, show error and return
+    if (!nameValid || !contactValid || !emailFormatValid || !otherFieldsValid) {
+      this.toast.error?.('Please correct the errors and try again.', 'Validation Error');
+      return;
+    }
 
     // spam trap
     if (this.formData.website) {
       this.toast.info('Thanks for reaching out.', 'Received');
       form.resetForm();
+      this.formSubmitted = false;
       return;
     }
 
@@ -298,8 +354,9 @@ export class ContactComponent implements OnInit {
 
     this.enquiries.createEnquiry(payload).subscribe({
       next: () => {
-        this.toast.success('Thanks, we’ll get back to you shortly.', 'Message sent');
+        this.toast.success("Thanks, we'll get back to you shortly.", 'Message sent');
         this.submitting = false;
+        this.formSubmitted = false;
         form.resetForm();
       },
       error: (err) => {

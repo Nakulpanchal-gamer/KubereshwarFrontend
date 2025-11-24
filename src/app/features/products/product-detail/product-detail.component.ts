@@ -83,15 +83,16 @@ type Spec = { key: string; value: string };
                   <!-- NAME -->
                   <div class="mb-3">
                     <label class="form-label">Name</label>
-                    <input class="form-control"
+                    <input #nameInput="ngModel"
+                           class="form-control"
                            [(ngModel)]="enquiry.name"
                            name="name"
                            required minlength="2"
-                           [class.is-invalid]="f.submitted && f.controls['name'].invalid">
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['name']?.errors?.['required']">
+                           [class.is-invalid]="formSubmitted && nameInput.invalid">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && nameInput.errors?.['required']">
                       Name is required.
                     </div>
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['name']?.errors?.['minlength']">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && nameInput.errors?.['minlength']">
                       Name must be at least 2 characters.
                     </div>
                   </div>
@@ -99,53 +100,56 @@ type Spec = { key: string; value: string };
                   <!-- EMAIL -->
                   <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input class="form-control"
+                    <input #emailInput="ngModel"
+                           class="form-control"
                            [(ngModel)]="enquiry.email"
                            name="email"
                            type="email"
                            required email
-                           [class.is-invalid]="f.submitted && f.controls['email'].invalid">
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['email']?.errors?.['required']">
+                           [class.is-invalid]="formSubmitted && emailInput.invalid">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && emailInput.errors?.['required']">
                       Email is required.
                     </div>
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['email']?.errors?.['email']">
-                      Enter a valid email address.
+                    <div class="invalid-feedback" *ngIf="formSubmitted && emailInput.errors?.['email']">
+                      Enter a valid email address (e.g., example&#64;email.com).
                     </div>
                   </div>
 
                   <!-- PHONE -->
                   <div class="mb-3">
                     <label class="form-label">Phone</label>
-                    <input class="form-control"
+                    <input #phoneInput="ngModel"
+                           class="form-control"
                            [(ngModel)]="enquiry.phone"
                            name="phone"
                            type="tel"
                            inputmode="tel"
                            required
-                           pattern="^[0-9+()\\-\\s]{7,20}$"
+                           pattern="^[0-9+()\\- ]{7,20}$"
                            maxlength="20"
-                           [class.is-invalid]="f.submitted && f.controls['phone'].invalid">
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['phone']?.errors?.['required']">
+                           [class.is-invalid]="formSubmitted && phoneInput.invalid">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && phoneInput.errors?.['required']">
                       Phone is required.
                     </div>
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['phone']?.errors?.['pattern']">
-                      Enter a valid phone number (digits, +, (), - allowed).
+                    <div class="invalid-feedback" *ngIf="formSubmitted && phoneInput.errors?.['pattern']">
+                      Enter a valid phone number (7-20 digits, +, (), - allowed).
                     </div>
                   </div>
 
                   <!-- MESSAGE -->
                   <div class="mb-3">
                     <label class="form-label">Message</label>
-                    <textarea class="form-control"
+                    <textarea #messageInput="ngModel"
+                              class="form-control"
                               rows="4"
                               [(ngModel)]="enquiry.message"
                               name="message"
                               required minlength="10"
-                              [class.is-invalid]="f.submitted && f.controls['message'].invalid"></textarea>
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['message']?.errors?.['required']">
+                              [class.is-invalid]="formSubmitted && messageInput.invalid"></textarea>
+                    <div class="invalid-feedback" *ngIf="formSubmitted && messageInput.errors?.['required']">
                       Message is required.
                     </div>
-                    <div class="invalid-feedback" *ngIf="f.submitted && f.controls['message']?.errors?.['minlength']">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && messageInput.errors?.['minlength']">
                       Message must be at least 10 characters.
                     </div>
                   </div>
@@ -153,7 +157,7 @@ type Spec = { key: string; value: string };
                   <!-- Honeypot (spam trap) -->
                   <input type="text" class="visually-hidden" name="website" [(ngModel)]="enquiry.website" tabindex="-1" autocomplete="off">
 
-                  <button class="btn btn-primary w-100" type="submit" [disabled]="f.invalid || submitting">
+                  <button class="btn btn-primary w-100" type="submit" [disabled]="submitting">
                     <ng-container *ngIf="!submitting; else busyTpl">Submit</ng-container>
                   </button>
                   <ng-template #busyTpl>
@@ -461,6 +465,7 @@ export class ProductDetailComponent implements OnInit {
   loading = true;
   submitting = false;
   activeIdx = 0;
+  formSubmitted = false;
 
   enquiry: { name: string; email: string; phone: string; message: string; website?: string } = {
     name: '', email: '', phone: '', message: '', website: ''
@@ -481,19 +486,20 @@ export class ProductDetailComponent implements OnInit {
   submitEnquiry(form: NgForm) {
     if (!this.product?._id) return;
 
-    // If invalid, mark and show messages
+    // Mark form as submitted to show validation messages
+    this.formSubmitted = true;
+
+    // If invalid, show error message and return
     if (form.invalid) {
-      // Angular shows invalid-feedback because we bind is-invalid to `f.submitted && invalid`.
-      // Trigger submitted state:
-      (form as any).submitted = true;
       this.toast.error?.('Please correct the errors and try again.');
       return;
     }
 
     // Spam trap
     if (this.enquiry.website) {
-      this.toast.success?.('Thanks, we’ll get back to you shortly.', 'Message received');
+      this.toast.success?.("Thanks, we'll get back to you shortly.", 'Message received');
       form.resetForm();
+      this.formSubmitted = false;
       return;
     }
 
@@ -511,6 +517,7 @@ export class ProductDetailComponent implements OnInit {
         this.toast.success('Your enquiry has been submitted.', 'Thank you');
         this.enquiry = { name: '', email: '', phone: '', message: '' };
         form.resetForm();
+        this.formSubmitted = false;
         this.submitting = false;
       },
       error: () => {

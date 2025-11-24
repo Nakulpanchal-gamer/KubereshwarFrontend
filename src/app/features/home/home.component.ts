@@ -23,8 +23,7 @@ type Category = { _id: string; name: string; description?: string; image?: Img |
           <div class="col-lg-6">
             <div class="hero-content">
               <h1 class="hero-title">
-                Industrial Solutions & 
-                <span class="text-primary">Machinery</span>
+                Industrial Solutions & Machinery
               </h1>
               <p class="hero-subtitle">
                 Discover our comprehensive range of industrial equipment, machinery, and solutions designed for modern manufacturing and production needs.
@@ -33,7 +32,7 @@ type Category = { _id: string; name: string; description?: string; image?: Img |
                 <a class="btn btn-primary btn-lg me-3" routerLink="/products">
                   <i class="fas fa-cogs me-2"></i>Browse Products
                 </a>
-                <a class="btn btn-outline-light btn-lg" routerLink="/contact">
+                <a class="btn btn-primary btn-lg" routerLink="/contact">
                   <i class="fas fa-phone me-2"></i>Get Quote
                 </a>
               </div>
@@ -244,14 +243,14 @@ type Category = { _id: string; name: string; description?: string; image?: Img |
       font-weight: 700;
       line-height: 1.2;
       margin-bottom: 1.5rem;
-      color: white;
+      color: #ffffff !important;
     }
 
     .hero-subtitle {
       font-size: 1.25rem;
       line-height: 1.6;
       margin-bottom: 2rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: #ffffff !important;
       font-weight: 400;
     }
 

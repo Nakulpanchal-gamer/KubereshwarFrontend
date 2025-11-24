@@ -55,7 +55,7 @@ import { RouterModule } from '@angular/router';
       <!-- Col 4: Pan India Presence -->
       <div class="col">
         <h6 class="fw-semibold mb-3">Pan India Presence</h6>
-        <p class="small text-secondary mb-0">
+        <p class="small mb-0">
           Gurgaon | Ahmedabad | Bangalore |<br>
           Bhopal | Chandigarh …
         </p>
@@ -99,7 +99,7 @@ import { RouterModule } from '@angular/router';
 
     <!-- Bottom row: copyright left, legal right -->
     <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 small">
-      <div class="text-secondary text-center text-md-start">
+      <div class="text-center text-md-start">
         © {{ year }} kubereshwar Solutions. All rights reserved.
       </div>
       <div class="d-flex flex-wrap justify-content-center gap-3">
@@ -111,8 +111,32 @@ import { RouterModule } from '@angular/router';
 
   </div>
 </footer>
-  `
-
+  `,
+  styles: [`
+    /* Override Bootstrap text-secondary class to make all footer text white */
+    .footer-dark .text-secondary,
+    .footer-dark p.text-secondary,
+    .footer-dark div.text-secondary {
+      color: #ffffff !important;
+    }
+    
+    /* Ensure all footer links are white and visible */
+    .footer-dark a,
+    .footer-dark .footer-link {
+      color: #ffffff !important;
+    }
+    
+    /* Ensure contact info (email, phone) is white */
+    .footer-dark ul.list-unstyled a,
+    .footer-dark li a {
+      color: #ffffff !important;
+    }
+    
+    /* Make sure all paragraph text is white */
+    .footer-dark p {
+      color: #ffffff !important;
+    }
+  `]
 })
 export class FooterComponent {
   year = new Date().getFullYear();
