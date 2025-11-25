@@ -105,13 +105,13 @@ type Spec = { key: string; value: string };
                            [(ngModel)]="enquiry.email"
                            name="email"
                            type="email"
-                           required email
-                           [class.is-invalid]="formSubmitted && emailInput.invalid">
-                    <div class="invalid-feedback" *ngIf="formSubmitted && emailInput.errors?.['required']">
-                      Email is required.
-                    </div>
-                    <div class="invalid-feedback" *ngIf="formSubmitted && emailInput.errors?.['email']">
+                           email
+                           [class.is-invalid]="formSubmitted && (hasContactError() || (enquiry.email?.trim() && emailInput.errors?.['email']))">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && enquiry.email?.trim() && emailInput.errors?.['email']">
                       Enter a valid email address (e.g., example&#64;email.com).
+                    </div>
+                    <div class="invalid-feedback" *ngIf="formSubmitted && hasContactError() && !enquiry.email?.trim()">
+                      Please provide either email or phone.
                     </div>
                   </div>
 
@@ -124,15 +124,14 @@ type Spec = { key: string; value: string };
                            name="phone"
                            type="tel"
                            inputmode="tel"
-                           required
                            pattern="^[0-9+()\\- ]{7,20}$"
                            maxlength="20"
-                           [class.is-invalid]="formSubmitted && phoneInput.invalid">
-                    <div class="invalid-feedback" *ngIf="formSubmitted && phoneInput.errors?.['required']">
-                      Phone is required.
-                    </div>
-                    <div class="invalid-feedback" *ngIf="formSubmitted && phoneInput.errors?.['pattern']">
+                           [class.is-invalid]="formSubmitted && (hasContactError() || (enquiry.phone?.trim() && phoneInput.errors?.['pattern']))">
+                    <div class="invalid-feedback" *ngIf="formSubmitted && enquiry.phone?.trim() && phoneInput.errors?.['pattern']">
                       Enter a valid phone number (7-20 digits, +, (), - allowed).
+                    </div>
+                    <div class="invalid-feedback" *ngIf="formSubmitted && hasContactError() && !enquiry.phone?.trim()">
+                      Please provide either email or phone.
                     </div>
                   </div>
 
@@ -143,15 +142,7 @@ type Spec = { key: string; value: string };
                               class="form-control"
                               rows="4"
                               [(ngModel)]="enquiry.message"
-                              name="message"
-                              required minlength="10"
-                              [class.is-invalid]="formSubmitted && messageInput.invalid"></textarea>
-                    <div class="invalid-feedback" *ngIf="formSubmitted && messageInput.errors?.['required']">
-                      Message is required.
-                    </div>
-                    <div class="invalid-feedback" *ngIf="formSubmitted && messageInput.errors?.['minlength']">
-                      Message must be at least 10 characters.
-                    </div>
+                              name="message"></textarea>
                   </div>
 
                   <!-- Honeypot (spam trap) -->
@@ -471,6 +462,12 @@ export class ProductDetailComponent implements OnInit {
     name: '', email: '', phone: '', message: '', website: ''
   };
 
+  hasContactError(): boolean {
+    const email = (this.enquiry.email || '').trim();
+    const phone = (this.enquiry.phone || '').trim();
+    return !email && !phone;
+  }
+
   placeholder = 'assets/placeholder-4x3.png';
 
   ngOnInit() {
@@ -489,8 +486,22 @@ export class ProductDetailComponent implements OnInit {
     // Mark form as submitted to show validation messages
     this.formSubmitted = true;
 
-    // If invalid, show error message and return
-    if (form.invalid) {
+    // Check if name is provided
+    const nameValid = this.enquiry.name && this.enquiry.name.trim().length >= 2;
+    
+    // Check if at least one of email or phone is provided
+    const email = (this.enquiry.email || '').trim();
+    const phone = (this.enquiry.phone || '').trim();
+    const contactValid = email || phone;
+    
+    // Validate email format if provided
+    const emailFormatValid = !email || (form.controls['email'] && !form.controls['email'].errors?.['email']);
+    
+    // Validate phone format if provided
+    const phoneFormatValid = !phone || (form.controls['phone'] && !form.controls['phone'].errors?.['pattern']);
+
+    // If any validation fails, show error message and return
+    if (!nameValid || !contactValid || !emailFormatValid || !phoneFormatValid) {
       this.toast.error?.('Please correct the errors and try again.');
       return;
     }

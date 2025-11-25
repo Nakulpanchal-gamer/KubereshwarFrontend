@@ -186,10 +186,7 @@ const getId = (o: IdLike | null | undefined) => (o && (o._id || o.id)) ?? '';
               <!-- Message -->
               <div class="col-12">
                 <label class="form-label">Message</label>
-                <textarea rows="5" class="form-control" [(ngModel)]="formData.message" name="message" required minlength="10"></textarea>
-                <div class="invalid small text-danger" *ngIf="formSubmitted && form.controls['message']?.invalid">
-                  Add a short message (min 10 chars).
-                </div>
+                <textarea rows="5" class="form-control" [(ngModel)]="formData.message" name="message"></textarea>
               </div>
 
 
@@ -318,9 +315,8 @@ export class ContactComponent implements OnInit {
     // Validate email format if provided
     const emailFormatValid = !email || (form.controls['email'] && !form.controls['email'].errors?.['email']);
     
-    // Check other form validations (category, message)
-    const otherFieldsValid = form.controls['categoryId']?.valid && 
-                            form.controls['message']?.valid;
+    // Check other form validations (category)
+    const otherFieldsValid = form.controls['categoryId']?.valid;
 
     // If any validation fails, show error and return
     if (!nameValid || !contactValid || !emailFormatValid || !otherFieldsValid) {

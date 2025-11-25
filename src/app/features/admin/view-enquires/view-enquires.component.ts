@@ -80,6 +80,7 @@ import { Enquiry } from '../../../core/models';
               <span *ngIf="!getAllProductsOfCategory(e) && getProductIds(e)?.length" class="text-muted">
                 ({{ getProductIds(e)?.length }} product{{ (getProductIds(e)?.length ?? 0) > 1 ? 's' : '' }})
               </span>
+              <span *ngIf="!getAllProductsOfCategory(e) && !getProductIds(e)?.length" class="text-muted"> (Category only)</span>
             </span>
             <ng-template #noProd><span class="text-muted">N/A</span></ng-template>
           </ng-template>
